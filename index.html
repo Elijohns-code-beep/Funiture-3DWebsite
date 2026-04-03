@@ -3,129 +3,818 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D</title>
+  <title>3D Wardrobe Collection</title>
 
-  <!-- Include model-viewer library -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
   <style>
-    /* Reset default margin/padding */
-    *{
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
+    
+    :root {
+      --primary: #0a0a0a;
+      --secondary: #141414;
+      --surface: #1f1f1f;
+      --surface-light: #2a2a2a;
+      --grey-warm: #3d3d3d;
+      --grey-cool: #4a4a4a;
+      --red-deep: #8b1a1a;
+      --red-accent: #c41e3a;
+      --red-bright: #e63946;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --text-grey: #b0b0b0;
+    }
+    
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, verdana, sans-serif;
-        background-color: #656161;
-        color: #333;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        min-height:100vh;
-        padding: 20px;
-        padding-top: 0;
-
+      font-family: 'Inter', sans-serif;
+      background: var(--primary);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
     }
-    header {
-        width: 100%;
-        text-align: center;
-        padding-bottom: 1px solid #ccc;
-        margin-bottom: 40px;
-
-    }
-
-    header h1 {
-        font-size: 2.2rem;
-        color: #222;
-
-    }
-
-    main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 30px;
-
-    }
-
-    model-viewer {
-      width: 600px;
-      height: 600px;
-      background-color: #9d9c9c;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
-
-    .description {
-        max-width: 600px;
-        text-align: center;
-        font-size: 1rem;
-        line-height: 1.6;
-        color: #555;
-    }
-
-    @media (max-width: 700px) {
-      model-viewer {
-        width: 90%;
-        height: 400px;
-      }
-    }
-    .red-strip{
+    
+    /* Animated mesh gradient background */
+    .ambient-bg {
       position: fixed;
       top: 0;
       left: 0;
-      width: 75vw;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(ellipse at 0% 0%, rgba(139, 26, 26, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, rgba(61, 61, 61, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(31, 31, 31, 0.8) 0%, transparent 70%),
+        linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+      z-index: -1;
+      animation: ambientShift 25s ease-in-out infinite;
+    }
+    
+    @keyframes ambientShift {
+      0%, 100% { 
+        transform: scale(1) rotate(0deg); 
+        filter: hue-rotate(0deg);
+      }
+      33% { 
+        transform: scale(1.05) rotate(1deg); 
+        filter: hue-rotate(5deg);
+      }
+      66% { 
+        transform: scale(1.02) rotate(-1deg); 
+        filter: hue-rotate(-5deg);
+      }
+    }
+    
+    /* Navigation accent line */
+    .nav-accent {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--red-deep) 20%, 
+        var(--red-accent) 50%, 
+        var(--red-deep) 80%, 
+        transparent 100%
+      );
+      z-index: 1000;
+      box-shadow: 0 0 20px rgba(196, 30, 58, 0.4);
+    }
+    
+    /* Side accent bars */
+    .side-accent {
+      position: fixed;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 200px;
+      background: linear-gradient(180deg, 
+        transparent 0%, 
+        var(--red-accent) 20%, 
+        var(--grey-warm) 50%, 
+        var(--red-accent) 80%, 
+        transparent 100%
+      );
+      z-index: 100;
+      opacity: 0.6;
+    }
+    
+    .side-accent.right {
+      left: auto;
+      right: 0;
+    }
+    
+    /* Header */
+    header {
+      position: relative;
+      text-align: center;
+      padding: 100px 20px 60px;
+      margin-bottom: 40px;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(180deg, transparent, var(--red-accent), transparent);
+    }
+    
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, 
+        #fff 0%, 
+        var(--text-grey) 40%, 
+        var(--red-accent) 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      opacity: 0;
+      transform: translateY(40px);
+      animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      text-shadow: 0 0 80px rgba(196, 30, 58, 0.3);
+    }
+    
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .subtitle::before,
+    .subtitle::after {
+      content: '—';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--red-accent);
+      opacity: 0.6;
+    }
+    
+    .subtitle::before {
+      left: -40px;
+    }
+    
+    .subtitle::after {
+      right: -40px;
+    }
+    
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Main gallery */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 60px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 140px;
+    }
+    
+    /* Model showcase */
+    .showcase {
+      position: relative;
+      opacity: 0;
+      transform: translateY(80px);
+      transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .showcase.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .showcase-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 30px;
+      padding-left: 20px;
+      border-left: 2px solid var(--red-deep);
+    }
+    
+    .model-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.75rem;
+      color: var(--red-accent);
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      background: rgba(196, 30, 58, 0.1);
+      border: 1px solid rgba(196, 30, 58, 0.3);
+      border-radius: 2px;
+    }
+    
+    .model-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    
+    /* Model container with grey frame */
+    .model-wrapper {
+      position: relative;
+      padding: 20px;
+      background: linear-gradient(145deg, var(--surface) 0%, var(--surface-light) 100%);
+      border-radius: 4px;
+      box-shadow: 
+        0 30px 60px -15px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    
+    .model-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 1px;
-      background: rgb(189, 10, 10);
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--grey-warm) 20%, 
+        var(--red-accent) 50%, 
+        var(--grey-warm) 80%, 
+        transparent 100%
+      );
+    }
+    
+    .model-container {
+      position: relative;
+      width: 100%;
+      background: var(--grey-warm);
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    model-viewer {
+      width: 100%;
+      height: 650px;
+      --poster-color: transparent;
+    }
+    
+    /* Corner accents */
+    .corner {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 2px solid var(--red-accent);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    
+    .corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+    .corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+    .corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+    .corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+    
+    /* Interaction hint */
+    .interaction-hint {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      background: rgba(10, 10, 10, 0.9);
+      border: 1px solid var(--grey-warm);
+      border-radius: 2px;
+      font-size: 0.8rem;
+      color: var(--text-grey);
+      letter-spacing: 0.05em;
+      opacity: 0;
+      transition: all 0.4s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .model-wrapper:hover .interaction-hint {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-5px);
+    }
+    
+    .hint-icon {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--red-accent);
+      border-radius: 50%;
+      position: relative;
+      animation: pulse 2s infinite;
+    }
+    
+    .hint-icon::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+      height: 6px;
+      background: var(--red-accent);
+      border-radius: 50%;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+    
+    /* Description with grey accent */
+    .description {
+      max-width: 550px;
+      margin: 30px auto 0;
+      text-align: center;
+      color: var(--text-grey);
+      font-size: 0.95rem;
+      line-height: 1.9;
+      padding: 30px;
+      background: linear-gradient(180deg, 
+        rgba(61, 61, 61, 0.2) 0%, 
+        transparent 100%
+      );
+      border-top: 1px solid var(--grey-warm);
+      position: relative;
+    }
+    
+    .description::before {
+      content: '◆';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--red-accent);
+      font-size: 0.6rem;
+      background: var(--surface);
+      padding: 0 10px;
+    }
+    
+    /* Scroll indicator */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 50px;
+      height: 50px;
+      border: 1px solid var(--grey-warm);
+      background: rgba(20, 20, 20, 0.8);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+    
+    .scroll-indicator:hover {
+      border-color: var(--red-accent);
+      background: rgba(196, 30, 58, 0.1);
+      transform: translateY(-3px);
+    }
+    
+    .scroll-indicator::after {
+      content: '↓';
+      color: var(--red-accent);
+      font-size: 1.2rem;
+      animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
+    }
+    
+    /* Progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 3px;
+      left: 0;
+      height: 1px;
+      background: var(--red-bright);
+      width: 0%;
+      z-index: 1001;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px var(--red-accent);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      main {
+        padding: 0 30px 80px;
+        gap: 100px;
+      }
+      
+      .side-accent {
+        display: none;
+      }
+      
+      model-viewer {
+        height: 450px;
+      }
+      
+      .showcase-header {
+        padding-left: 15px;
+      }
+      
+      .subtitle::before,
+      .subtitle::after {
+        display: none;
+      }
+    }
+    
+    /* Loader */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
       z-index: 9999;
-      margin: 0;
-
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    
+    .loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .loader-line {
+      width: 200px;
+      height: 2px;
+      background: var(--surface-light);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .loader-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--red-deep), var(--red-accent));
+      animation: loadProgress 2s ease-out forwards;
+    }
+    
+    @keyframes loadProgress {
+      to { width: 100%; }
+    }
+    
+    .loader-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--text-grey);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
-  <div class="red-strip"></div>
-    
-
-  <header>3D Wardrobe</header>
-  <main>
-
-  <!-- Interactive 3D Model -->
-  <model-viewer src="wardrobe4.glb" 
-                alt="Wardrobe4 Model" 
-                auto-rotate 
-                camera-controls 
-                interaction-prompt="auto"
-                shadow-intensity="1" 
-                exposure="1"
-                ar
-                background-color="#ffffff">
-  </model-viewer>
-
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="loader-text">Collection</div>
+    <div class="loader-line">
+      <div class="loader-progress"></div>
+    </div>
+  </div>
   
-   <model-viewer src="wardrobe3.glb" 
-                alt="wardrobe3 Model" 
-                auto-rotate 
-                camera-controls 
-                interaction-prompt="auto"
-                shadow-intensity="1" 
-                exposure="1"
-                ar
-                background-color="#ffffff">
-  </model-viewer>
-  <model-viewer src="wardrobe2.glb" 
-                alt="wardrobe2 Model" 
-                auto-rotate 
-                camera-controls 
-                interaction-prompt="auto"
-                shadow-intensity="1" 
-                exposure="1"
-                ar
-                background-color="#ffffff">
-  </model-viewer>
-  </main>
+  <!-- Ambient background -->
+  <div class="ambient-bg"></div>
+  
+  <!-- Navigation -->
+  <div class="nav-accent"></div>
+  <div class="progress-bar" id="progressBar"></div>
+  
+  <!-- Side accents -->
+  <div class="side-accent"></div>
+  <div class="side-accent right"></div>
+  
+  <header>
+    <h1>3D Models</h1>
+    <div class="subtitle">Interactive Collection</div>
+  </header>
+  
+  <main>
+    <!-- Wardrobe 1: The Classic - Warm Studio Lighting -->
+    <section class="showcase" data-model="1">
+      <div class="showcase-header">
+        <span class="model-number">Model 01</span>
+        <h2 class="model-title">The Classic</h2>
+      </div>
+      <div class="model-wrapper">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="model-container">
+          <model-viewer 
+            src="wardrobe4.glb" 
+            alt="Wardrobe 4 - Classic Design" 
+            auto-rotate 
+            camera-controls 
+            interaction-prompt="none"
+            
+            
+            exposure="1.0"
+            shadow-intensity="1.8"
+            shadow-softness="0.4"
+            
 
+            environment-image="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr"
+           
+          
+            tone-mapping="aces"
+            
+          
+            camera-orbit="30deg 75deg 2.2m"
+            min-camera-orbit="auto auto 1.2m"
+            max-camera-orbit="auto auto 4m"
+            field-of-view="25deg"
+            
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed">
+          </model-viewer>
+        </div>
+        <div class="interaction-hint">
+          <div class="hint-icon"></div>
+          <span>Drag to Rotate &bull; Scroll to Zoom</span>
+        </div>
+      </div>
+      <p class="description">
+        A splash of color 
+      </p>
+    </section>
+    
+    <!-- Wardrobe 2: The Contemporary - Cool Industrial Lighting -->
+    <section class="showcase" data-model="2">
+      <div class="showcase-header">
+        <span class="model-number">Model 02</span>
+        <h2 class="model-title">The Contemporary</h2>
+      </div>
+      <div class="model-wrapper">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="model-container">
+          <model-viewer 
+            src="wardrobe3.glb" 
+            alt="Wardrobe 3 - Contemporary Design" 
+            auto-rotate 
+            camera-controls 
+            interaction-prompt="none"
+            
+           
+            exposure="0.9"
+            shadow-intensity="2.0"
+            shadow-softness="0.3"
+            
+           
+            environment-image="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr"
+           
+            tone-mapping="aces"
+            
+            camera-orbit="-20deg 70deg 2.0m"
+            min-camera-orbit="auto auto 1.2m"
+            max-camera-orbit="auto auto 4m"
+            field-of-view="28deg"
+            
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed">
+          </model-viewer>
+        </div>
+        <div class="interaction-hint">
+          <div class="hint-icon"></div>
+          <span>Drag to Rotate &bull; Scroll to Zoom</span>
+        </div>
+      </div>
+      <p class="description">
+         Minimalist aesthetics 
+      </p>
+    </section>
+    
+    <!-- Wardrobe 3: The Artisan - Natural Outdoor Lighting -->
+    <section class="showcase" data-model="3">
+      <div class="showcase-header">
+        <span class="model-number">Model 03</span>
+        <h2 class="model-title">The Artisan</h2>
+      </div>
+      <div class="model-wrapper">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="model-container">
+          <model-viewer 
+            src="wardrobe2.glb" 
+            alt="Wardrobe 2 - Artisan Design" 
+            auto-rotate 
+            camera-controls 
+            interaction-prompt="none"
+            
+           
+            exposure="1.1"
+            shadow-intensity="1.6"
+            shadow-softness="0.6"
+            
+           
+            environment-image="https://modelviewer.dev/shared-assets/environments/whipple_creek_regional_park_04_1k.hdr"
+            
+            tone-mapping="aces"
+            
+            camera-orbit="45deg 65deg 2.3m"
+            min-camera-orbit="auto auto 1.2m"
+            max-camera-orbit="auto auto 4m"
+            field-of-view="26deg"
+            
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed">
+          </model-viewer>
+        </div>
+        <div class="interaction-hint">
+          <div class="hint-icon"></div>
+          <span>Drag to Rotate &bull; Scroll to Zoom</span>
+        </div>
+      </div>
+      <p class="description">
+       
+      </p>
+    </section>
+
+    <!-- Model 4: Dramatic High Contrast -->
+    <section class="showcase" data-model="4">
+      <div class="showcase-header">
+        <span class="model-number">Model 04</span>
+        <h2 class="model-title">The Bold</h2>
+      </div>
+      <div class="model-wrapper">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="model-container">
+          <model-viewer 
+            src="wardrobe.glb" 
+            alt="Wardrobe - Dramatic Design" 
+            auto-rotate 
+            camera-controls 
+            interaction-prompt="none"
+            
+           
+            exposure="0.5"
+            shadow-intensity="2.2"
+            shadow-softness="0.25"
+            
+           
+           environment-image="https://modelviewer.dev/shared-assets/environments/aircraft_workshop_01_1k.hdr"
+           
+            
+            tone-mapping="aces"
+            
+            camera-orbit="0deg 80deg 2.1m"
+            min-camera-orbit="auto auto 1.2m"
+            max-camera-orbit="auto auto 4m"
+            field-of-view="24deg"
+            
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed">
+          </model-viewer>
+        </div>
+        <div class="interaction-hint">
+          <div class="hint-icon"></div>
+          <span>Drag to Rotate &bull; Scroll to Zoom</span>
+        </div>
+      </div>
+      <p class="description">
+       
+      </p>
+    </section>
+    
+    <!-- Model 5: Chess board animation -->
+    <section class="showcase" data-model="5">
+      <div class="showcase-header">
+        <span class="model-number">Model 05</span>
+        <h2 class="model-title">Chess in Motion</h2>
+      </div>
+      <div class="model-wrapper">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="model-container">
+          <model-viewer 
+            src="chess-board_animation_knockdown.glb" 
+            alt="Animated chess board" 
+            auto-rotate 
+            camera-controls 
+            interaction-prompt="none"
+            
+           
+            exposure="1.0"
+            shadow-intensity="1.7"
+            shadow-softness="0.5"
+
+            environment-image="https://modelviewer.dev/shared-assets/environments/spruit_sunrise_1k_HDR.hdr"
+            
+            tone-mapping="aces"
+            
+            camera-orbit="60deg 72deg 2.2m"
+            min-camera-orbit="auto auto 1.2m"
+            max-camera-orbit="auto auto 4m"
+            field-of-view="25deg"
+            
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed">
+          </model-viewer>
+        </div>
+        <div class="interaction-hint">
+          <div class="hint-icon"></div>
+          <span>Drag to Rotate &bull; Scroll to Zoom</span>
+        </div>
+      </div>
+      <p class="description">
+       
+      </p>
+    </section>
+  </main>
+  
+  <div class="scroll-indicator"></div>
+
+  <script>
+    // Loader
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+      }, 1500);
+    });
+    
+    // Scroll progress
+    window.addEventListener('scroll', () => {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('progressBar').style.width = scrolled + '%';
+    });
+    
+    // Intersection Observer
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -100px 0px' });
+    
+    document.querySelectorAll('.showcase').forEach(showcase => {
+      observer.observe(showcase);
+    });
+    
+    // Scroll indicator
+    document.querySelector('.scroll-indicator').addEventListener('click', () => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+  </script>
 </body>
 </html>
